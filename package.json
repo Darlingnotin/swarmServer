@@ -1,0 +1,16 @@
+{
+  "name": "swarm_server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "swarmServer.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": "swarmServer.js",
+  "author": "Darling",
+  "license": "ISC",
+  "dependencies": {
+    "uuid": "^8.3.2",
+    "ws": "^7.4.4"
+  }
+}
