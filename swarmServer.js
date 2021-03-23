@@ -297,9 +297,6 @@ function openWebsocketServer() {
                 case "requestConnection":
                     requestConnection();
                     break;
-                case "identifySelf":
-                    identifyServerConnection();
-                    break;
                 case "socketPing":
                     socketPing();
                     break;
@@ -324,6 +321,7 @@ function openWebsocketServer() {
                     "echoConnectionUrl": "ws://" + ws._socket.remoteAddress.split(":")[3],
                     "serverAddress": serverAddress,
                     "originalBootstrapServerAddress": originalBootstrapServerAddress,
+                    "swarmUuid": swarmUuid,
                     "hasAlreadyEchoedThroughUuid": [],
                     "messageUuid": uuidv4()
                 }));
@@ -342,10 +340,6 @@ function openWebsocketServer() {
                     "websocketConnection": ws
                 });
                 console.log("Connected To: " + messageData.originalSenderUuid);
-                return;
-            }
-
-            function identifyServerConnection() {
                 return;
             }
 
