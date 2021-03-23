@@ -151,13 +151,15 @@ function connectToBootstrapServer(ServerURL) {
             messageHandledUuidHistory.shift();
         }
         messageHandledUuidHistory.push(messageData.messageUuid);
-
         switch (messageData.action) {
             case "requestConnectionResponse":
                 requestConnectionResponse();
                 break;
             case "bootstrapServerPing":
                 pingReceivedFromBootstrapServer();
+                break;
+            case "socketPing":
+                socketPing(messageData);
                 break;
             case "echo":
                 sendEchoData(messageData, "identifiedSockets");
@@ -298,7 +300,7 @@ function openWebsocketServer() {
                     requestConnection();
                     break;
                 case "socketPing":
-                    socketPing();
+                    socketPing(messageData);
                     break;
                 case "echo":
                     sendEchoData(messageData, "bootstrapServer");
@@ -343,34 +345,6 @@ function openWebsocketServer() {
                 return;
             }
 
-            function socketPing() {
-                var serverInformationExists = false;
-                if (messageData.originalSenderUuid != uuid) {
-                    for (let i = 0; i < serverUrls.length; i++) {
-                        if (serverUrls[i].uuid === messageData.originalSenderUuid) {
-                            serverUrls[i].timestamp = Date.now();
-                            serverUrls[i].numberFromSeed = messageData.numberFromSeed;
-                            serverUrls[i].connectedPeers = messageData.connectedPeers;
-                            serverInformationExists = true;
-                        }
-                    }
-                    if (!serverInformationExists) {
-                        serverUrls.push({
-                            "serverAddress": messageData.serverAddress,
-                            "uuid": messageData.originalSenderUuid,
-                            "numberFromSeed": messageData.numberFromSeed,
-                            "connectedPeers": messageData.connectedPeers,
-                            "timestamp": Date.now()
-                        });
-                    }
-                }
-                if (!configJson.seedsServer) {
-                    sendToConnectedBootstrapServer(messageData);
-                }
-                messageData.action = "bootstrapServerPing";
-                sendToIdentifiedSockets(messageData);
-                return;
-            }
             return;
         });
         ws.on('close', function connection() {
@@ -465,8 +439,10 @@ function sendToIdentifiedSockets(messageData) {
     for (let i = 0; i < identifiedSockets.length; i++) {
         var hasAlreadyEchoedTo = false;
         for (let x = 0; x < identifiedSockets.length; x++) {
-            if (messageData.hasAlreadyEchoedThroughUuid[i] == identifiedSockets[x].connectionToUuid) {
+            if (identifiedSockets[i].connectionToUuid == messageData.hasAlreadyEchoedThroughUuid[x]) {
                 hasAlreadyEchoedTo = true;
+            } else {
+                hasAlreadyEchoedTo = false;
             }
         }
         if (!hasAlreadyEchoedTo) {
@@ -482,6 +458,8 @@ function sendToConnectedBootstrapServer(messageData) {
     for (let x = 0; x < identifiedSockets.length; x++) {
         if (messageData.hasAlreadyEchoedThroughUuid[x] == bootstrapServerCurrentlyConnectedTo.uuid) {
             hasAlreadyEchoedTo = true;
+        } else {
+            hasAlreadyEchoedTo = false;
         }
     }
     if (!hasAlreadyEchoedTo && !configJson.seedsServer) {
@@ -523,6 +501,34 @@ function testPortForward(serverAddress) {
             portHasBeenForwarded = false;
         }
     }
+    return;
+}
+
+function socketPing(messageData) {
+    var serverInformationExists = false;
+    if (messageData.originalSenderUuid != uuid) {
+        for (let i = 0; i < serverUrls.length; i++) {
+            if (serverUrls[i].uuid === messageData.originalSenderUuid) {
+                serverUrls[i].timestamp = Date.now();
+                serverUrls[i].numberFromSeed = messageData.numberFromSeed;
+                serverUrls[i].connectedPeers = messageData.connectedPeers;
+                serverInformationExists = true;
+            }
+        }
+        if (!serverInformationExists) {
+            serverUrls.push({
+                "serverAddress": messageData.serverAddress,
+                "uuid": messageData.originalSenderUuid,
+                "numberFromSeed": messageData.numberFromSeed,
+                "connectedPeers": messageData.connectedPeers,
+                "timestamp": Date.now()
+            });
+        }
+    }
+    if (!configJson.seedsServer) {
+        sendToConnectedBootstrapServer(messageData);
+    }
+    sendToIdentifiedSockets(messageData);
     return;
 }
 
