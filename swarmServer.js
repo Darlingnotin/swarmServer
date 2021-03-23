@@ -8,9 +8,10 @@ var configJson = {
     "defaultServerAddress": "",
     "defaultBootstrapServerURL": "Default Bootstrap Server URL",
     "defaultWebsocketServerPort": "787",
+    "serverName": "",
+    "swarmUuid": "",
     "seedsServer": true,
     "reconnectToOriginalBootstrapServer": true,
-    "serverName": ""
 };
 var serverAddress = "";
 var bootstrapServerCurrentlyConnectedTo = {};
@@ -47,8 +48,16 @@ fs.exists(path.join(process.cwd() + "/Config.json"), function (exists) {
                 serverAddress = configJson.defaultServerAddress;
                 originalBootstrapServerAddress = configJson.defaultServerAddress;
             }
+            if (configJson.swarmUuid == "") {
+                swarmUuid = uuidv4();
+                configJson.swarmUuid = swarmUuid;
+                fs.writeFile('Config.json', JSON.stringify(configJson, null, 2), function (err) {
+                    if (err) return console.log(err);
+                });
+            } else {
+                swarmUuid = configJson.swarmUuid;
+            }
             numberFromSeed = 0;
-            swarmUuid = uuidv4();
             serverIsOriginalBootstrapServer = true;
             openWebsocketServer();
         }
